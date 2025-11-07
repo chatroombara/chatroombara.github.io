@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چت آنلاین پیشرفته</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6; color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 20px;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 30px; padding: 20px 0; }
+        h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .subtitle { font-size: 1.1em; opacity: 0.9; }
+        
+        .main-content {
+            background: white; border-radius: 15px; padding: 30px; margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .hidden { display: none; }
+        .step { margin: 20px 0; }
+        .step h2 { color: #4a90e2; margin-bottom: 15px; text-align: center; }
+        
+        .auth-section { text-align: center; max-width: 500px; margin: 0 auto; }
+        .input-group { margin: 15px 0; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input {
+            width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px;
+            font-size: 16px; text-align: center; direction: ltr;
+        }
+        input:focus { outline: none; border-color: #4a90e2; }
+        
+        .btn {
+            background: linear-gradient(45deg, #4a90e2, #357abd);
+            color: white; border: none; padding: 12px 30px; border-radius: 25px;
+            font-size: 16px; font-weight: bold; cursor: pointer; margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(74,144,226,0.3); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn.secondary { background: linear-gradient(45deg, #95a5a6, #7f8c8d); }
+        .btn.danger { background: linear-gradient(45deg, #e74c3c, #c0392b); }
+        .btn.success { background: linear-gradient(45deg, #27ae60, #2ecc71); }
+        
+        .error { color: #e74c3c; font-size: 14px; margin: 5px 0; }
+        .success { color: #27ae60; font-size: 14px; margin: 5px 0; }
+        .info { color: #3498db; font-size: 14px; margin: 5px 0; }
+        
+        .chat-container { display: flex; height: 600px; }
+        .sidebar {
+            width: 280px; background: #f8f9fa; border-radius: 15px 0 0 15px; padding: 20px;
+            border: 1px solid #eee; display: flex; flex-direction: column;
+        }
+        .main-chat {
+            flex: 1; background: white; border-radius: 0 15px 15px 0;
+            border: 1px solid #eee; display: flex; flex-direction: column;
+        }
+        
+        .user-section {
+            background: white; border-radius: 10px; padding: 15px; margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+        .user-info {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+        }
+        .user-avatar {
+            width: 40px; height: 40px; border-radius: 50%; background: #4a90e2; 
+            display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;
+        }
+        .user-details { flex: 1; }
+        .user-name { font-weight: bold; font-size: 14px; }
+        .user-status { font-size: 12px; color: #666; }
+        
+        .user-list { list-style: none; flex: 1; }
+        .user-list h4 { margin-bottom: 10px; color: #333; font-size: 14px; }
+        .user-item {
+            padding: 8px 12px; margin: 5px 0; background: white; border-radius: 8px;
+            border: 1px solid #ddd; display: flex; align-items: center; gap: 8px;
+        }
+        .user-status-dot { width: 8px; height: 8px; border-radius: 50%; background: #27ae60; }
+        .user-name { font-weight: bold; color: #333; font-size: 13px; }
+        
+        .chat-header {
+            padding: 15px 20px; background: #f8f9fa; border-radius: 0 15px 0 0;
+            border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;
+        }
+        .chat-title { font-size: 18px; font-weight: bold; color: #333; }
+        .connection-status {
+            display: flex; align-items: center; gap: 5px; font-size: 14px;
+        }
+        .status-indicator { width: 8px; height: 8px; border-radius: 50%; }
+        .status-online { background: #27ae60; }
+        .status-offline { background: #e74c3c; }
+        
+        .messages {
+            flex: 1; padding: 20px; overflow-y: auto; background: #f8f9fa;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+        .message { 
+            display: flex; gap: 10px; 
+            align-items: flex-start;
+        }
+        .message.own { flex-direction: row-reverse; }
+        .message-avatar {
+            width: 35px; height: 35px; border-radius: 50%; background: #4a90e2; 
+            display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;
+        }
+        .message-content {
+            max-width: 70%; 
+            display: flex; flex-direction: column;
+        }
+        .message-bubble {
+            padding: 12px 16px; border-radius: 18px; 
+            word-wrap: break-word; position: relative;
+        }
+        .message.own .message-bubble {
+            background: linear-gradient(45deg, #4a90e2, #357abd); color: white; 
+            border-bottom-left-radius: 5px;
+        }
+        .message:not(.own) .message-bubble {
+            background: white; color: #333; border: 1px solid #ddd;
+            border-bottom-right-radius: 5px;
+        }
+        .message-info {
+            display: flex; justify-content: space-between; align-items: center; margin-top: 5px;
+            font-size: 11px; opacity: 0.7;
+        }
+        .message-name {
+            font-weight: bold; margin-bottom: 2px;
+        }
+        .message-time { 
+            text-align: left; 
+        }
+        .message.own .message-time { text-align: right; }
+        
+        .message-image {
+            max-width: 200px; max-height: 200px; border-radius: 12px; margin: 5px 0;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .message-image:hover {
+            transform: scale(1.05);
+        }
+        
+        .message-input {
+            padding: 20px; background: white; border-top: 1px solid #eee; border-radius: 0 0 15px 0;
+            display: flex; gap: 10px; align-items: flex-end;
+        }
+        .input-container {
+            flex: 1; display: flex; flex-direction: column; gap: 10px;
+        }
+        .input-wrapper {
+            display: flex; gap: 10px; align-items: flex-end;
+        }
+        .message-input-field {
+            flex: 1; border: 1px solid #ddd; border-radius: 20px; padding: 12px 16px; 
+            text-align: right; resize: none; min-height: 40px; max-height: 120px;
+        }
+        .attachment-buttons {
+            display: flex; gap: 5px; margin-bottom: 5px;
+        }
+        .attachment-btn {
+            background: #f8f9fa; border: 1px solid #ddd; border-radius: 50%; 
+            width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; transition: all 0.2s;
+        }
+        .attachment-btn:hover { background: #e9ecef; transform: scale(1.1); }
+        .attachment-btn input { display: none; }
+        .send-btn { border-radius: 20px; padding: 12px 20px; }
+        
+        .verification-section {
+            background: #e8f5e8; padding: 20px; border-radius: 12px; margin: 20px 0;
+            border: 1px solid #d4edda;
+        }
+        .otp-display {
+            font-size: 20px; font-weight: bold; text-align: center; margin: 15px 0;
+            background: white; padding: 15px; border-radius: 8px; border: 2px dashed #27ae60;
+            font-family: 'Courier New', monospace; letter-spacing: 2px;
+        }
+        .otp-timer {
+            text-align: center; color: #e74c3c; font-weight: bold; margin: 10px 0;
+        }
+        .sms-status {
+            text-align: center; padding: 10px; border-radius: 8px; margin: 10px 0;
+        }
+        .sms-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .sms-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        .image-preview {
+            max-width: 200px; max-height: 200px; border-radius: 12px; margin: 10px;
+            border: 2px solid #4a90e2;
+        }
+        
+        .loading { 
+            display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; 
+            border-top: 2px solid #4a90e2; border-radius: 50%; animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .scrollable { overflow-y: auto; max-height: 100%; }
+        
+        .sms-settings {
+            background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #dee2e6;
+        }
+        .sms-settings h4 { margin-bottom: 10px; color: #333; }
+        .sms-option {
+            margin: 10px 0; display: flex; align-items: center; gap: 10px;
+        }
+        .sms-option input[type="radio"] { width: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💬 چت آنلاین پیشرفته</h1>
+            <div class="subtitle">ارسال SMS واقعی + ارسال عکس + چت بلادرنگ</div>
+        </header>
+
+        <div class="main-content">
+            <!-- بخش احراز هویت -->
+            <div id="authSection" class="auth-section">
+                <div class="step">
+                    <h2>🔐 ورود به چت</h2>
+                    
+                    <!-- انتخاب روش SMS -->
+                    <div class="sms-settings">
+                        <h4>📱 روش ارسال SMS:</h4>
+                        <div class="sms-option">
+                            <input type="radio" id="smsDemo" name="smsMethod" value="demo" checked>
+                            <label for="smsDemo">🔧 دمو (رایگان - بدون نیاز به API)</label>
+                        </div>
+                        <div class="sms-option">
+                            <input type="radio" id="smsTwilio" name="smsMethod" value="twilio">
+                            <label for="smsTwilio">🌍 Twilio API (واقعی - نیاز به حساب)</label>
+                        </div>
+                        <div class="sms-option">
+                            <input type="radio" id="smsIran" name="smsMethod" value="iran">
+                            <label for="smsIran">🇮🇷 سرویس‌های ایرانی (هر سه - کافه‌بازار - ملت)</label>
+                        </div>
+                    </div>
+                    
+                    <div id="phoneStep">
+                        <div class="input-group">
+                            <label for="phone">شماره موبایل ایرانی:</label>
+                            <input type="text" id="phone" placeholder="09123456789" maxlength="11" dir="ltr">
+                            <div id="phoneError" class="error"></div>
+                        </div>
+                        <button id="sendCodeBtn" class="btn">📱 ارسال کد تایید</button>
+                        <div id="smsStatus"></div>
+                    </div>
+                    
+                    <div id="codeStep" class="hidden">
+                        <div class="verification-section">
+                            <h3>📱 کد تایید شما:</h3>
+                            <div id="otpDisplay" class="otp-display">در حال ارسال...</div>
+                            <div id="otpTimer" class="otp-timer hidden">زمان باقی‌مانده: 60 ثانیه</div>
+                        </div>
+                        <div class="input-group">
+                            <label for="verificationCode">کد تایید:</label>
+                            <input type="text" id="verificationCode" placeholder="123456" maxlength="6" dir="ltr">
+                            <div id="codeError" class="error"></div>
+                        </div>
+                        <button id="verifyBtn" class="btn">✅ تایید کد</button>
+                        <button id="resendCodeBtn" class="btn secondary">🔄 ارسال مجدد</button>
+                    </div>
+                    
+                    <div id="nameStep" class="hidden">
+                        <div class="input-group">
+                            <label for="userName">نام و نام خانوادگی:</label>
+                            <input type="text" id="userName" placeholder="نام شما">
+                            <div id="nameError" class="error"></div>
+                        </div>
+                        <button id="loginBtn" class="btn success">🚀 ورود به چت</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- بخش چت -->
+            <div id="chatSection" class="hidden">
+                <div class="chat-container">
+                    <div class="sidebar">
+                        <div class="user-section">
+                            <div class="user-info">
+                                <div class="user-avatar" id="currentUserAvatar">UN</div>
+                                <div class="user-details">
+                                    <div class="user-name" id="currentUserName">نام کاربر</div>
+                                    <div class="user-status">آنلاین</div>
+                                </div>
+                            </div>
+                            <button id="logoutBtn" class="btn danger" style="width: 100%;">🚪 خروج</button>
+                        </div>
+                        
+                        <div class="user-list scrollable">
+                            <h4>👥 کاربران آنلاین (<span id="onlineCount">1</span>)</h4>
+                            <div id="onlineUsers"></div>
+                            <h4 style="margin-top: 20px;">💤 آفلاین‌ها (<span id="offlineCount">0</span>)</h4>
+                            <div id="offlineUsers"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="main-chat">
+                        <div class="chat-header">
+                            <div class="chat-title">💬 چت گروهی پیشرفته</div>
+                            <div class="connection-status">
+                                <div id="connectionIndicator" class="status-indicator status-online"></div>
+                                <span id="connectionText">متصل</span>
+                            </div>
+                        </div>
+                        
+                        <div id="messages" class="messages"></div>
+                        
+                        <div class="message-input">
+                            <div class="input-container">
+                                <div class="attachment-buttons">
+                                    <label class="attachment-btn" title="ارسال عکس">
+                                        🖼️
+                                        <input type="file" id="imageInput" accept="image/*">
+                                    </label>
+                                    <div class="attachment-btn" title="ایموجی">
+                                        😊
+                                    </div>
+                                </div>
+                                
+                                <div class="input-wrapper">
+                                    <textarea 
+                                        id="messageInput" 
+                                        class="message-input-field" 
+                                        placeholder="پیام خود را تایپ کنید..." 
+                                        rows="1"
+                                    ></textarea>
+                                    <button id="sendBtn" class="btn send-btn">📤 ارسال</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AdvancedChatApp {
+            constructor() {
+                this.currentUser = null;
+                this.messages = [];
+                this.isConnected = true;
+                this.otpCode = null;
+                this.otpTimer = null;
+                this.otpExpiryTime = null;
+                
+                // API تنظیمات (می‌توانید تغییر دهید)
+                this.smsConfig = {
+                    twilio: {
+                        accountSid: 'YOUR_TWILIO_ACCOUNT_SID', // جایگزین کنید
+                        authToken: 'YOUR_TWILIO_AUTH_TOKEN',   // جایگزین کنید
+                        from: 'YOUR_TWILIO_PHONE'             // جایگزین کنید
+                    },
+                    iranServices: {
+                        hamkhan: { apiKey: 'YOUR_API_KEY' },
+                        kafebazar: { apiKey: 'YOUR_API_KEY' },
+                        melat: { apiKey: 'YOUR_API_KEY' }
+                    }
+                };
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.loadExistingMessages();
+                this.updateUserList();
+                this.loadCurrentUser();
+                
+                // به روز رسانی پیام‌ها هر 2 ثانیه
+                setInterval(() => {
+                    this.loadExistingMessages();
+                    this.updateUserList();
+                }, 2000);
+            }
+            
+            setupEventListeners() {
+                // انتخاب روش SMS
+                document.querySelectorAll('input[name="smsMethod"]').forEach(radio => {
+                    radio.addEventListener('change', () => {
+                        this.updateSmsStatus();
+                    });
+                });
+                
+                // دکمه ارسال کد
+                document.getElementById('sendCodeBtn').addEventListener('click', () => {
+                    this.sendVerificationCode();
+                });
+                
+                // دکمه ارسال مجدد
+                document.getElementById('resendCodeBtn').addEventListener('click', () => {
+                    this.sendVerificationCode();
+                });
+                
+                // دکمه تایید کد
+                document.getElementById('verifyBtn').addEventListener('click', () => {
+                    this.verifyCode();
+                });
+                
+                // دکمه ورود
+                document.getElementById('loginBtn').addEventListener('click', () => {
+                    this.login();
+                });
+                
+                // دکمه خروج
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    this.logout();
+                });
+                
+                // دکمه ارسال پیام
+                document.getElementById('sendBtn').addEventListener('click', () => {
+                    this.sendMessage();
+                });
+                
+                // ارسال پیام با Enter
+                document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+                
+                // آپلود عکس
+                document.getElementById('imageInput').addEventListener('change', (e) => {
+                    this.handleImageUpload(e);
+                });
+                
+                // auto-resize textarea
+                document.getElementById('messageInput').addEventListener('input', (e) => {
+                    this.autoResizeTextarea(e.target);
+                });
+            }
+            
+            updateSmsStatus() {
+                const selectedMethod = document.querySelector('input[name="smsMethod"]:checked').value;
+                const statusEl = document.getElementById('smsStatus');
+                
+                switch(selectedMethod) {
+                    case 'demo':
+                        statusEl.innerHTML = '<div class="info">🔧 از روش دمو استفاده می‌شود - کد: 123456</div>';
+                        break;
+                    case 'twilio':
+                        statusEl.innerHTML = '<div class="info">🌍 نیاز به تنظیم API Twilio در کد</div>';
+                        break;
+                    case 'iran':
+                        statusEl.innerHTML = '<div class="info">🇮🇷 نیاز به تنظیم API سرویس‌های ایرانی در کد</div>';
+                        break;
+                }
+            }
+            
+            validateIranianPhone(phone) {
+                const phoneRegex = /^09[0-9]{9}$/;
+                return phoneRegex.test(phone);
+            }
+            
+            generateOtpCode() {
+                return Math.floor(100000 + Math.random() * 900000).toString();
+            }
+            
+            async sendVerificationCode() {
+                const phone = document.getElementById('phone').value.trim();
+                const errorEl = document.getElementById('phoneError');
+                const smsStatusEl = document.getElementById('smsStatus');
+                
+                if (!this.validateIranianPhone(phone)) {
+                    errorEl.textContent = 'لطفاً شماره موبایل معتبر ایرانی وارد کنید (مثال: 09123456789)';
+                    return;
+                }
+                
+                errorEl.textContent = '';
+                
+                const selectedMethod = document.querySelector('input[name="smsMethod"]:checked').value;
+                
+                // نمایش وضعیت بارگذاری
+                smsStatusEl.innerHTML = '<div class="info">⏳ در حال ارسال کد...</div>';
+                
+                // تولید کد OTP
+                this.otpCode = this.generateOtpCode();
+                this.otpExpiryTime = Date.now() + (5 * 60 * 1000); // 5 دقیقه اعتبار
+                
+                try {
+                    let smsSuccess = false;
+                    
+                    switch(selectedMethod) {
+                        case 'demo':
+                            smsSuccess = await this.sendDemoSms(phone);
+                            break;
+                        case 'twilio':
+                            smsSuccess = await this.sendTwilioSms(phone);
+                            break;
+                        case 'iran':
+                            smsSuccess = await this.sendIranianSms(phone);
+                            break;
+                    }
+                    
+                    if (smsSuccess) {
+                        smsStatusEl.innerHTML = '<div class="sms-status sms-success">✅ کد با موفقیت ارسال شد!</div>';
+                        this.showOtpStep();
+                    } else {
+                        smsStatusEl.innerHTML = '<div class="sms-status sms-error">❌ خطا در ارسال SMS. از روش دمو استفاده می‌شود.</div>';
+                        // fallback به دمو
+                        this.otpCode = '123456';
+                        this.showOtpStep();
+                    }
+                } catch (error) {
+                    console.error('خطا در ارسال SMS:', error);
+                    smsStatusEl.innerHTML = '<div class="sms-status sms-error">❌ خطا در ارسال SMS. از روش دمو استفاده می‌شود.</div>';
+                    this.otpCode = '123456';
+                    this.showOtpStep();
+                }
+            }
+            
+            async sendDemoSms(phone) {
+                // شبیه‌سازی ارسال SMS در دمو
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                console.log('دمو SMS ارسال شد به:', phone, 'کد:', this.otpCode);
+                return true;
+            }
+            
+            async sendTwilioSms(phone) {
+                // TODO: پیاده‌سازی Twilio API
+                // این نیاز به Twilio SDK و تنظیم API keys دارد
+                console.log('Twilio SMS نیاز به تنظیم API دارد');
+                return false;
+            }
+            
+            async sendIranianSms(phone) {
+                // TODO: پیاده‌سازی سرویس‌های ایرانی
+                console.log('سرویس‌های ایرانی نیاز به تنظیم API دارد');
+                return false;
+            }
+            
+            showOtpStep() {
+                document.getElementById('phoneStep').classList.add('hidden');
+                document.getElementById('codeStep').classList.remove('hidden');
+                
+                // نمایش کد
+                document.getElementById('otpDisplay').textContent = this.otpCode;
+                
+                // شروع تایمر
+                this.startOtpTimer();
+            }
+            
+            startOtpTimer() {
+                const timerEl = document.getElementById('otpTimer');
+                timerEl.classList.remove('hidden');
+                
+                this.otpTimer = setInterval(() => {
+                    const remainingTime = this.otpExpiryTime - Date.now();
+                    
+                    if (remainingTime <= 0) {
+                        clearInterval(this.otpTimer);
+                        timerEl.textContent = 'کد منقضی شده است. لطفاً مجدداً درخواست کنید.';
+                        return;
+                    }
+                    
+                    const minutes = Math.floor(remainingTime / 60000);
+                    const seconds = Math.floor((remainingTime % 60000) / 1000);
+                    timerEl.textContent = `زمان باقی‌مانده: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                }, 1000);
+            }
+            
+            verifyCode() {
+                const code = document.getElementById('verificationCode').value.trim();
+                const errorEl = document.getElementById('codeError');
+                
+                // بررسی انقضای کد
+                if (Date.now() > this.otpExpiryTime) {
+                    errorEl.textContent = 'کد منقضی شده است. لطفاً مجدداً درخواست کنید.';
+                    return;
+                }
+                
+                if (code !== this.otpCode) {
+                    errorEl.textContent = 'کد تایید نادرست است.';
+                    return;
+                }
+                
+                errorEl.textContent = '';
+                document.getElementById('codeStep').classList.add('hidden');
+                document.getElementById('nameStep').classList.remove('hidden');
+                
+                // توقف تایمر
+                if (this.otpTimer) {
+                    clearInterval(this.otpTimer);
+                }
+            }
+            
+            login() {
+                const name = document.getElementById('userName').value.trim();
+                const errorEl = document.getElementById('nameError');
+                
+                if (name.length < 2) {
+                    errorEl.textContent = 'لطفاً نام و نام خانوادگی خود را وارد کنید';
+                    return;
+                }
+                
+                errorEl.textContent = '';
+                
+                // ذخیره کاربر
+                const phone = document.getElementById('phone').value.trim();
+                this.currentUser = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                    name: name,
+                    phone: phone,
+                    avatar: this.generateAvatar(name),
+                    online: true
+                };
+                
+                // ذخیره در localStorage
+                localStorage.setItem('chatUser', JSON.stringify(this.currentUser));
+                this.saveUserToList();
+                
+                // نمایش بخش چت
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('chatSection').classList.remove('hidden');
+                
+                // به روزرسانی نمایش کاربر
+                this.updateCurrentUserDisplay();
+                
+                // ارسال پیام خوشامدگویی
+                this.sendSystemMessage(`${name} به چت پیوست`);
+            }
+            
+            logout() {
+                if (this.currentUser) {
+                    this.sendSystemMessage(`${this.currentUser.name} از چت خارج شد`);
+                    this.currentUser.online = false;
+                    this.saveUserToList();
+                }
+                
+                localStorage.removeItem('chatUser');
+                this.currentUser = null;
+                
+                // نمایش بخش احراز هویت
+                document.getElementById('chatSection').classList.add('hidden');
+                document.getElementById('authSection').classList.remove('hidden');
+                
+                // پاک کردن فرم
+                document.getElementById('phone').value = '';
+                document.getElementById('verificationCode').value = '';
+                document.getElementById('userName').value = '';
+            }
+            
+            updateCurrentUserDisplay() {
+                if (this.currentUser) {
+                    document.getElementById('currentUserAvatar').textContent = this.currentUser.avatar;
+                    document.getElementById('currentUserName').textContent = this.currentUser.name;
+                }
+            }
+            
+            loadCurrentUser() {
+                const storedUser = localStorage.getItem('chatUser');
+                if (storedUser) {
+                    this.currentUser = JSON.parse(storedUser);
+                    this.updateCurrentUserDisplay();
+                    
+                    // نمایش بخش چت
+                    document.getElementById('authSection').classList.add('hidden');
+                    document.getElementById('chatSection').classList.remove('hidden');
+                }
+            }
+            
+            generateAvatar(name) {
+                return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            }
+            
+            autoResizeTextarea(textarea) {
+                textarea.style.height = 'auto';
+                textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+            }
+            
+            async handleImageUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                // بررسی نوع فایل
+                if (!file.type.startsWith('image/')) {
+                    alert('فقط فایل‌های تصویری مجاز هستند');
+                    return;
+                }
+                
+                // بررسی اندازه فایل (حداکثر 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('حجم فایل نباید بیشتر از 5 مگابایت باشد');
+                    return;
+                }
+                
+                // تبدیل به base64
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imageData = e.target.result;
+                    this.sendImageMessage(imageData, file.name);
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            sendImageMessage(imageData, fileName) {
+                if (!this.currentUser) return;
+                
+                const message = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                    type: 'image',
+                    text: imageData,
+                    fileName: fileName,
+                    sender: this.currentUser.name,
+                    senderId: this.currentUser.id,
+                    timestamp: new Date().toISOString()
+                };
+                
+                this.messages.push(message);
+                this.saveMessages();
+                this.renderMessages();
+                
+                // پاک کردن input
+                document.getElementById('imageInput').value = '';
+            }
+            
+            sendMessage() {
+                const messageInput = document.getElementById('messageInput');
+                const text = messageInput.value.trim();
+                
+                if (!text || !this.currentUser) return;
+                
+                const message = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                    type: 'text',
+                    text: text,
+                    sender: this.currentUser.name,
+                    senderId: this.currentUser.id,
+                    timestamp: new Date().toISOString()
+                };
+                
+                this.messages.push(message);
+                this.saveMessages();
+                this.renderMessages();
+                
+                messageInput.value = '';
+                this.autoResizeTextarea(messageInput);
+            }
+            
+            sendSystemMessage(text) {
+                const message = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                    type: 'system',
+                    text: text,
+                    sender: 'سیستم',
+                    senderId: 'system',
+                    timestamp: new Date().toISOString()
+                };
+                
+                this.messages.push(message);
+                this.saveMessages();
+                this.renderMessages();
+            }
+            
+            loadExistingMessages() {
+                const storedMessages = localStorage.getItem('chatMessages');
+                if (storedMessages) {
+                    this.messages = JSON.parse(storedMessages);
+                    this.renderMessages();
+                }
+            }
+            
+            saveMessages() {
+                localStorage.setItem('chatMessages', JSON.stringify(this.messages));
+            }
+            
+            saveUserToList() {
+                if (!this.currentUser) return;
+                
+                const users = this.getAllUsers();
+                const existingIndex = users.findIndex(u => u.id === this.currentUser.id);
+                
+                if (existingIndex >= 0) {
+                    users[existingIndex] = this.currentUser;
+                } else {
+                    users.push(this.currentUser);
+                }
+                
+                localStorage.setItem('chatUsers', JSON.stringify(users));
+            }
+            
+            getAllUsers() {
+                const storedUsers = localStorage.getItem('chatUsers');
+                return storedUsers ? JSON.parse(storedUsers) : [];
+            }
+            
+            renderMessages() {
+                const messagesContainer = document.getElementById('messages');
+                messagesContainer.innerHTML = '';
+                
+                this.messages.forEach(message => {
+                    const messageEl = this.createMessageElement(message);
+                    messagesContainer.appendChild(messageEl);
+                });
+                
+                // اسکرول به پایین
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            
+            createMessageElement(message) {
+                const messageEl = document.createElement('div');
+                messageEl.className = `message ${message.senderId === this.currentUser?.id ? 'own' : 'other'}`;
+                
+                // آواتار
+                const avatarEl = document.createElement('div');
+                avatarEl.className = 'message-avatar';
+                avatarEl.textContent = this.generateAvatar(message.sender);
+                messageEl.appendChild(avatarEl);
+                
+                // محتوا
+                const contentEl = document.createElement('div');
+                contentEl.className = 'message-content';
+                
+                const bubbleEl = document.createElement('div');
+                bubbleEl.className = 'message-bubble';
+                
+                if (message.type === 'image') {
+                    const imgEl = document.createElement('img');
+                    imgEl.src = message.text;
+                    imgEl.className = 'message-image';
+                    imgEl.onclick = () => this.showFullImage(message.text);
+                    bubbleEl.appendChild(imgEl);
+                } else if (message.type === 'system') {
+                    const systemEl = document.createElement('div');
+                    systemEl.style.textAlign = 'center';
+                    systemEl.style.fontStyle = 'italic';
+                    systemEl.style.color = '#666';
+                    systemEl.textContent = message.text;
+                    bubbleEl.appendChild(systemEl);
+                } else {
+                    const textEl = document.createElement('div');
+                    textEl.textContent = message.text;
+                    bubbleEl.appendChild(textEl);
+                }
+                
+                contentEl.appendChild(bubbleEl);
+                
+                // اطلاعات پیام (فقط برای پیام‌های کاربر)
+                if (message.type !== 'system') {
+                    const infoEl = document.createElement('div');
+                    infoEl.className = 'message-info';
+                    
+                    const nameEl = document.createElement('div');
+                    nameEl.className = 'message-name';
+                    nameEl.textContent = message.sender;
+                    infoEl.appendChild(nameEl);
+                    
+                    const timeEl = document.createElement('div');
+                    timeEl.className = 'message-time';
+                    timeEl.textContent = this.formatTime(message.timestamp);
+                    infoEl.appendChild(timeEl);
+                    
+                    contentEl.appendChild(infoEl);
+                }
+                
+                messageEl.appendChild(contentEl);
+                return messageEl;
+            }
+            
+            showFullImage(src) {
+                // نمایش تصویر در حالت بزرگ
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+                overlay.style.display = 'flex';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.zIndex = '1000';
+                overlay.style.cursor = 'pointer';
+                
+                const img = document.createElement('img');
+                img.src = src;
+                img.style.maxWidth = '90%';
+                img.style.maxHeight = '90%';
+                img.style.borderRadius = '10px';
+                
+                overlay.appendChild(img);
+                overlay.onclick = () => document.body.removeChild(overlay);
+                
+                document.body.appendChild(overlay);
+            }
+            
+            formatTime(timestamp) {
+                const date = new Date(timestamp);
+                return date.toLocaleTimeString('fa-IR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            }
+            
+            updateUserList() {
+                const users = this.getAllUsers();
+                const onlineUsers = users.filter(u => u.online);
+                const offlineUsers = users.filter(u => !u.online);
+                
+                // به روزرسانی تعداد
+                document.getElementById('onlineCount').textContent = onlineUsers.length;
+                document.getElementById('offlineCount').textContent = offlineUsers.length;
+                
+                // نمایش کاربران آنلاین
+                const onlineList = document.getElementById('onlineUsers');
+                onlineList.innerHTML = '';
+                
+                onlineUsers.forEach(user => {
+                    const userEl = this.createUserElement(user);
+                    onlineList.appendChild(userEl);
+                });
+                
+                // نمایش کاربران آفلاین
+                const offlineList = document.getElementById('offlineUsers');
+                offlineList.innerHTML = '';
+                
+                offlineUsers.forEach(user => {
+                    const userEl = this.createUserElement(user);
+                    offlineList.appendChild(userEl);
+                });
+            }
+            
+            createUserElement(user) {
+                const userEl = document.createElement('div');
+                userEl.className = 'user-item';
+                
+                const statusDot = document.createElement('div');
+                statusDot.className = `user-status-dot ${user.online ? 'status-online' : 'status-offline'}`;
+                userEl.appendChild(statusDot);
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'user-avatar';
+                avatar.style.width = '25px';
+                avatar.style.height = '25px';
+                avatar.style.fontSize = '10px';
+                avatar.textContent = this.generateAvatar(user.name);
+                userEl.appendChild(avatar);
+                
+                const name = document.createElement('div');
+                name.className = 'user-name';
+                name.textContent = user.name;
+                userEl.appendChild(name);
+                
+                return userEl;
+            }
+        }
+
+        // راه‌اندازی برنامه
+        document.addEventListener('DOMContentLoaded', () => {
+            new AdvancedChatApp();
+        });
+    </script>
+</body>
+</html>
